@@ -17,25 +17,50 @@ import '@/globals.css'
 </html>
 
 <script is:inline>
-  const getThemePreference = () => {
-    if (typeof localStorage !== 'undefined' && localStorage.getItem('theme')) {
-      return localStorage.getItem('theme')
+  function getThemePreference() {
+    if (typeof localStorage !== 'undefined') {
+      const storedTheme = localStorage.getItem('theme')
+      try {
+        if (
+          ['dark', 'theme-light', 'system'].includes(JSON.parse(storedTheme))
+        ) {
+          return JSON.parse(storedTheme)
+        }
+      } catch (e) {
+        if (['dark', 'theme-light', 'system'].includes(storedTheme)) {
+          return storedTheme
+        }
+      }
     }
     return window.matchMedia('(prefers-color-scheme: dark)').matches
       ? 'dark'
-      : 'light'
+      : 'theme-light'
   }
-  const isDark = getThemePreference() === 'dark'
-  document.documentElement.classList[isDark ? 'add' : 'remove']('dark')
 
-  if (typeof localStorage !== 'undefined') {
-    const observer = new MutationObserver(() => {
-      const isDark = document.documentElement.classList.contains('dark')
-      localStorage.setItem('theme', isDark ? 'dark' : 'light')
-    })
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ['class'],
-    })
+  function resolveTheme(theme) {
+    if (theme === 'system') {
+      return window.matchMedia('(prefers-color-scheme: dark)').matches
+        ? 'dark'
+        : 'theme-light'
+    }
+    return theme
   }
+
+  // Initial theme setup
+  const theme = getThemePreference()
+  const resolvedTheme = resolveTheme(theme)
+
+  document.documentElement.classList[
+    resolvedTheme === 'dark' ? 'add' : 'remove'
+  ]('dark')
+
+  // Watch for system theme changes
+  window
+    .matchMedia('(prefers-color-scheme: dark)')
+    .addEventListener('change', (e) => {
+      const storedTheme = localStorage.getItem('theme')
+      if (storedTheme === 'system') {
+        document.documentElement.classList[e.matches ? 'add' : 'remove']('dark')
+      }
+    })
 </script>

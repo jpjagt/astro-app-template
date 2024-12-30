@@ -1,6 +1,7 @@
 import * as React from 'react'
 import { Moon, Sun } from 'lucide-react'
 
+import { useLocalStorageState } from '@/hooks/useLocalStorageState'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -10,15 +11,17 @@ import {
 } from '@/components/ui/dropdown-menu'
 
 export function ModeToggle() {
-  const [theme, setThemeState] = React.useState<
-    'theme-light' | 'dark' | 'system'
-  >('theme-light')
+  const [theme, setTheme] = useLocalStorageState<Theme>('theme', null)
 
+  // Initial theme setup
   React.useEffect(() => {
+    if (theme) return
     const isDarkMode = document.documentElement.classList.contains('dark')
-    setThemeState(isDarkMode ? 'dark' : 'theme-light')
+    const initialTheme = isDarkMode ? 'dark' : 'theme-light'
+    setTheme(initialTheme)
   }, [])
 
+  // Apply theme changes
   React.useEffect(() => {
     const isDark =
       theme === 'dark' ||
